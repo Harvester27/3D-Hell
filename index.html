@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Střílečka - Ohnivé koule</title>
+    <title>3D Hell - Ohnivé démoni</title>
     <style>
         body {
             margin: 0;
@@ -154,7 +154,7 @@
             <div id="healthFill" style="width: 100%"></div>
         </div>
         <div style="margin-top: 10px;">Skóre: <span id="score">0</span></div>
-        <div>Ohnivé koule: <span id="enemies">0</span></div>
+        <div>Ohnivé démoni: <span id="enemies">0</span></div>
         <div>FPS: <span id="fps">0</span></div>
     </div>
     
@@ -182,7 +182,7 @@
         const TILE_SIZE = 10;
         const WALL_HEIGHT = 10;
         const PLAYER_HEIGHT = 5;
-        const PLAYER_SPEED = 0.15;
+        const PLAYER_SPEED = 0.25;  // Zvýšená rychlost pohybu
         const MOUSE_SENSITIVITY = 0.002;
         const BULLET_SPEED = 0.8;
         const ENEMY_SPEED = 0.05;
@@ -417,33 +417,126 @@
                 this.orbitDirection = Math.random() > 0.5 ? 1 : -1;
                 this.preferredDistance = 30 + Math.random() * 20;
                 
-                // Create 3D fireball
+                // Create 3D fireball demon
                 this.group = new THREE.Group();
                 
-                // Core
+                // Core skull shape
                 const coreGeometry = new THREE.SphereGeometry(1.5, 16, 16);
                 const coreMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xffff00,
+                    color: 0xff4400,
                     emissive: 0xff6600,
                     emissiveIntensity: 2
                 });
                 this.core = new THREE.Mesh(coreGeometry, coreMaterial);
                 this.group.add(this.core);
                 
-                // Outer flame
+                // Evil eyes
+                const eyeGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+                const eyeMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffff00,
+                    emissive: 0xffff00,
+                    emissiveIntensity: 5
+                });
+                
+                // Left eye
+                this.leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                this.leftEye.position.set(-0.5, 0.3, 1.2);
+                this.group.add(this.leftEye);
+                
+                // Right eye
+                this.rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                this.rightEye.position.set(0.5, 0.3, 1.2);
+                this.group.add(this.rightEye);
+                
+                // Eye pupils
+                const pupilGeometry = new THREE.SphereGeometry(0.15, 6, 6);
+                const pupilMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x000000
+                });
+                
+                const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+                leftPupil.position.set(-0.5, 0.3, 1.35);
+                this.group.add(leftPupil);
+                
+                const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+                rightPupil.position.set(0.5, 0.3, 1.35);
+                this.group.add(rightPupil);
+                
+                // Evil mouth with teeth
+                const mouthGroup = new THREE.Group();
+                
+                // Mouth opening
+                const mouthGeometry = new THREE.BoxGeometry(1.2, 0.6, 0.4);
+                const mouthMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x000000,
+                    emissive: 0xff3300,
+                    emissiveIntensity: 1
+                });
+                const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+                mouth.position.set(0, -0.5, 1.2);
+                mouthGroup.add(mouth);
+                
+                // Teeth
+                const toothGeometry = new THREE.ConeGeometry(0.15, 0.3, 4);
+                const toothMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffffaa,
+                    emissive: 0xffff00,
+                    emissiveIntensity: 2
+                });
+                
+                // Upper teeth
+                for (let i = -3; i <= 3; i++) {
+                    const tooth = new THREE.Mesh(toothGeometry, toothMaterial);
+                    tooth.position.set(i * 0.15, -0.25, 1.3);
+                    tooth.rotation.z = Math.PI;
+                    mouthGroup.add(tooth);
+                }
+                
+                // Lower teeth
+                for (let i = -3; i <= 3; i++) {
+                    const tooth = new THREE.Mesh(toothGeometry, toothMaterial);
+                    tooth.position.set(i * 0.15, -0.75, 1.3);
+                    mouthGroup.add(tooth);
+                }
+                
+                this.mouthGroup = mouthGroup;
+                this.group.add(mouthGroup);
+                
+                // Outer flame with spikes
                 const flameGeometry = new THREE.SphereGeometry(2, 16, 16);
                 const flameMaterial = new THREE.MeshBasicMaterial({
                     color: 0xff6600,
                     transparent: true,
-                    opacity: 0.6,
+                    opacity: 0.4,
                     emissive: 0xff3300,
                     emissiveIntensity: 1
                 });
                 this.flame = new THREE.Mesh(flameGeometry, flameMaterial);
                 this.group.add(this.flame);
                 
+                // Flame spikes/hair
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    const spikeGeometry = new THREE.ConeGeometry(0.3, 1.5, 6);
+                    const spikeMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xff6600,
+                        transparent: true,
+                        opacity: 0.8,
+                        emissive: 0xff9900,
+                        emissiveIntensity: 2
+                    });
+                    const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
+                    spike.position.set(
+                        Math.cos(angle) * 1.8,
+                        Math.sin(angle) * 1.8,
+                        0
+                    );
+                    spike.rotation.z = angle - Math.PI / 2;
+                    this.flame.add(spike);
+                }
+                
                 // Point light
-                this.light = new THREE.PointLight(0xff6600, 2, 30);
+                this.light = new THREE.PointLight(0xff6600, 3, 30);
                 this.light.castShadow = true;
                 this.group.add(this.light);
                 
@@ -457,6 +550,7 @@
                 // Animation timers
                 this.pulseTimer = 0;
                 this.rotationTimer = 0;
+                this.mouthTimer = 0;
             }
             
             createParticles() {
@@ -497,11 +591,29 @@
                 // Animation
                 this.pulseTimer += delta * 3;
                 this.rotationTimer += delta * 2;
+                this.mouthTimer += delta * 5;
                 
                 const pulse = Math.sin(this.pulseTimer) * 0.2 + 1;
                 this.core.scale.setScalar(pulse);
                 this.flame.scale.setScalar(pulse * 1.2);
                 
+                // Animate eyes - look at player
+                const toPlayer = player.position.clone().sub(this.position);
+                toPlayer.normalize();
+                this.leftEye.lookAt(player.position);
+                this.rightEye.lookAt(player.position);
+                
+                // Eye glow based on state
+                const eyeIntensity = this.state === 'attacking' ? 8 : 5;
+                this.leftEye.material.emissiveIntensity = eyeIntensity + Math.sin(this.pulseTimer * 2);
+                this.rightEye.material.emissiveIntensity = eyeIntensity + Math.sin(this.pulseTimer * 2);
+                
+                // Animate mouth - chomping
+                const mouthOpen = Math.abs(Math.sin(this.mouthTimer)) * 0.3;
+                this.mouthGroup.scale.y = 1 + mouthOpen;
+                
+                // Rotate whole demon
+                this.group.lookAt(player.position);
                 this.particleSystem.rotation.y += delta * 2;
                 this.flame.rotation.y += delta;
                 
@@ -586,7 +698,7 @@
                 this.group.position.copy(this.position);
                 
                 // Light flicker
-                this.light.intensity = 2 + Math.sin(this.pulseTimer * 5) * 0.5;
+                this.light.intensity = 3 + Math.sin(this.pulseTimer * 5) * 0.5;
             }
             
             checkCollision(pos) {
@@ -605,19 +717,27 @@
                     player.health -= 10;
                     this.damageCooldown = 60;
                     
-                    // Create explosion effect
-                    for (let i = 0; i < 20; i++) {
+                    // Demon roar effect - bigger explosion
+                    for (let i = 0; i < 30; i++) {
                         createParticle(
                             this.position.clone(),
                             new THREE.Vector3(
-                                (Math.random() - 0.5) * 0.5,
-                                Math.random() * 0.3,
-                                (Math.random() - 0.5) * 0.5
+                                (Math.random() - 0.5) * 0.8,
+                                Math.random() * 0.5,
+                                (Math.random() - 0.5) * 0.8
                             ),
-                            0xff6600,
-                            1.5
+                            0xff0000,
+                            2
                         );
                     }
+                    
+                    // Flash eyes on attack
+                    this.leftEye.material.emissiveIntensity = 15;
+                    this.rightEye.material.emissiveIntensity = 15;
+                    setTimeout(() => {
+                        this.leftEye.material.emissiveIntensity = 5;
+                        this.rightEye.material.emissiveIntensity = 5;
+                    }, 200);
                 }
                 if (this.damageCooldown > 0) this.damageCooldown--;
             }
@@ -653,17 +773,41 @@
             }
             
             destroy() {
-                // Death explosion
-                for (let i = 0; i < 30; i++) {
+                // Death explosion - more dramatic for demon
+                for (let i = 0; i < 50; i++) {
                     createParticle(
                         this.position.clone(),
                         new THREE.Vector3(
-                            (Math.random() - 0.5) * 0.8,
-                            Math.random() * 0.5,
-                            (Math.random() - 0.5) * 0.8
+                            (Math.random() - 0.5) * 1.2,
+                            Math.random() * 0.8,
+                            (Math.random() - 0.5) * 1.2
                         ),
                         Math.random() > 0.5 ? 0xff6600 : 0xffaa00,
-                        2
+                        2.5
+                    );
+                }
+                
+                // Extra eye explosion
+                for (let i = 0; i < 10; i++) {
+                    createParticle(
+                        this.leftEye.position.clone().add(this.position),
+                        new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.5,
+                            Math.random() * 0.3,
+                            (Math.random() - 0.5) * 0.5
+                        ),
+                        0xffff00,
+                        1
+                    );
+                    createParticle(
+                        this.rightEye.position.clone().add(this.position),
+                        new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.5,
+                            Math.random() * 0.3,
+                            (Math.random() - 0.5) * 0.5
+                        ),
+                        0xffff00,
+                        1
                     );
                 }
                 
@@ -880,13 +1024,27 @@
             }
             
             // Draw enemies
-            minimapCtx.fillStyle = '#ff6600';
             for (let enemy of enemies) {
+                // Pulsing demon on minimap
+                const pulse = Math.sin(Date.now() * 0.005) * 0.5 + 0.5;
+                minimapCtx.fillStyle = '#ff0000';
                 minimapCtx.beginPath();
                 minimapCtx.arc(
                     enemy.position.x * scale,
                     enemy.position.z * scale,
-                    3,
+                    4 + pulse * 2,
+                    0,
+                    Math.PI * 2
+                );
+                minimapCtx.fill();
+                
+                // Inner glow
+                minimapCtx.fillStyle = '#ffaa00';
+                minimapCtx.beginPath();
+                minimapCtx.arc(
+                    enemy.position.x * scale,
+                    enemy.position.z * scale,
+                    2,
                     0,
                     Math.PI * 2
                 );
@@ -991,6 +1149,11 @@
             if (keys['s']) moveVector.z += 1;
             if (keys['a']) moveVector.x -= 1;
             if (keys['d']) moveVector.x += 1;
+            
+            // Debug - zobrazí stisknuté klávesy
+            if (keys['w'] || keys['s'] || keys['a'] || keys['d']) {
+                console.log('Pohyb:', keys);
+            }
             
             if (moveVector.length() > 0) {
                 moveVector.normalize();
